@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Restaurant } from "../models/restaurant.model";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
+import { log } from "console";
 
 const getRestaurant = async (req: Request, res: Response) => {
   try {
@@ -66,13 +67,15 @@ const updateRestaurant = async (req: Request, res: Response) => {
     restaurant.menuItems = req.body.menuItems;
     restaurant.lastUpdated = new Date();
 
-    if (req.files) {
+    console.log(req.file);
+    
+    if (req.file) {
       const imageUrl = await uploadImage(req.file as Express.Multer.File);
-      restaurant.imageUrl = imageUrl;
+      restaurant.imageUrl = imageUrl;      
     }
 
     await restaurant.save();
-    res.status(200).send(restaurant)
+    res.status(200).send(restaurant);
   } catch (error) {
     console.error("Restaurant Updation Error:: " + error);
     res.status(500).json({ message: "Error while updating restaurant" });
@@ -88,4 +91,4 @@ const uploadImage = async (file: Express.Multer.File) => {
   return uploadResponse.url;
 };
 
-export { createRestaurant, getRestaurant , updateRestaurant};
+export { createRestaurant, getRestaurant, updateRestaurant };
