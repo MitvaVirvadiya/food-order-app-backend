@@ -3,6 +3,7 @@ import { Restaurant } from "../models/restaurant.model";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
 import { log } from "console";
+import { json } from "stream/consumers";
 
 const getRestaurant = async (req: Request, res: Response) => {
   try {
@@ -68,10 +69,10 @@ const updateRestaurant = async (req: Request, res: Response) => {
     restaurant.lastUpdated = new Date();
 
     console.log(req.file);
-    
+
     if (req.file) {
       const imageUrl = await uploadImage(req.file as Express.Multer.File);
-      restaurant.imageUrl = imageUrl;      
+      restaurant.imageUrl = imageUrl;
     }
 
     await restaurant.save();
@@ -79,6 +80,73 @@ const updateRestaurant = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Restaurant Updation Error:: " + error);
     res.status(500).json({ message: "Error while updating restaurant" });
+  }
+};
+
+const searchRestaurants = async (req: Request, res: Response) => {
+  try {
+    const city = req.params.city;
+
+    const searchQuery = (req.query.searchQuery as string) || "";
+    const selectCuisine = (req.query.selectCuisine as string) || "";
+    const sortOption = (req.query.sortOption as string) || "lastUpdated";
+    const page = parseInt(req.query.page as string) || 1;
+
+    let query: any = {};
+
+    query["city"] = new RegExp(city, "i");
+    const cityCheck = await Restaurant.countDocuments(query);
+    if (cityCheck === 0) {
+      return res.status(404).json({
+        data: [],
+        pagination: {
+          total: 0,
+          page: 1,
+          pages: 1,
+        },
+      });
+    }
+
+    if (selectCuisine) {
+      const cuisineArray = selectCuisine
+        .split(",")
+        .map((cuisine) => new RegExp(cuisine, "i"));
+
+      query["cuisines"] = { $all: cuisineArray };
+    }
+
+    if (searchQuery) {
+      const searchRegex = new RegExp(searchQuery, "i");
+      query["$or"] = [
+        { restaurantName: searchRegex },
+        { cuisines: { $in: [searchRegex] } },
+      ];
+    }
+
+    const pageSize = 10;
+    const skip = (page - 1) * pageSize;
+
+    const restaurant = await Restaurant.find(query)
+      .sort({ [sortOption]: 1 })
+      .skip(skip)
+      .limit(pageSize)
+      .lean();
+
+    const total = await Restaurant.countDocuments(query);
+
+    const response = {
+      data: restaurant,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / pageSize),
+      },
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error("Restaurant Search Error:: " + error);
+    res.status(500).json({ message: "Error while searching restaurant" });
   }
 };
 
@@ -91,4 +159,4 @@ const uploadImage = async (file: Express.Multer.File) => {
   return uploadResponse.url;
 };
 
-export { createRestaurant, getRestaurant, updateRestaurant };
+export { createRestaurant, getRestaurant, updateRestaurant, searchRestaurants };
