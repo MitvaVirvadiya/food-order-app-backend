@@ -88,7 +88,7 @@ const searchRestaurants = async (req: Request, res: Response) => {
     const city = req.params.city;
 
     const searchQuery = (req.query.searchQuery as string) || "";
-    const selectCuisine = (req.query.selectCuisine as string) || "";
+    const selectedCuisines = (req.query.selectedCuisines as string) || "";
     const sortOption = (req.query.sortOption as string) || "lastUpdated";
     const page = parseInt(req.query.page as string) || 1;
 
@@ -107,12 +107,12 @@ const searchRestaurants = async (req: Request, res: Response) => {
       });
     }
 
-    if (selectCuisine) {
-      const cuisineArray = selectCuisine
+    if (selectedCuisines) {
+      const cuisinesArray = selectedCuisines
         .split(",")
         .map((cuisine) => new RegExp(cuisine, "i"));
 
-      query["cuisines"] = { $all: cuisineArray };
+      query["cuisines"] = { $all: cuisinesArray };
     }
 
     if (searchQuery) {
@@ -126,7 +126,8 @@ const searchRestaurants = async (req: Request, res: Response) => {
     const pageSize = 10;
     const skip = (page - 1) * pageSize;
 
-    const restaurant = await Restaurant.find(query)
+    // sortOption = "lastUpdated"
+    const restaurants = await Restaurant.find(query)
       .sort({ [sortOption]: 1 })
       .skip(skip)
       .limit(pageSize)
@@ -135,7 +136,7 @@ const searchRestaurants = async (req: Request, res: Response) => {
     const total = await Restaurant.countDocuments(query);
 
     const response = {
-      data: restaurant,
+      data: restaurants,
       pagination: {
         total,
         page,
@@ -145,10 +146,11 @@ const searchRestaurants = async (req: Request, res: Response) => {
 
     res.json(response);
   } catch (error) {
-    console.error("Restaurant Search Error:: " + error);
-    res.status(500).json({ message: "Error while searching restaurant" });
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 
 const uploadImage = async (file: Express.Multer.File) => {
   const image = file;
