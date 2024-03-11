@@ -2,7 +2,8 @@ import express from "express";
 import multer from "multer";
 import {
   createRestaurant,
-  getRestaurant,
+  getRestaurantById,
+  getRestaurants,
   searchRestaurants,
   updateRestaurant,
 } from "../controllers/restaurant.controller";
@@ -20,7 +21,7 @@ const upload = multer({
   },
 });
 
-router.get("/", jwtCheck, jwtParse, getRestaurant);
+router.get("/", jwtCheck, jwtParse, getRestaurants);
 
 router.post(
   "/",
@@ -41,6 +42,16 @@ router.put(
 );
 
 // search
+router.get(
+  "/:restaurantId",
+  param("restaurantId")
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("RestaurantId paramenter must be a valid string"),
+    getRestaurantById
+);
+
 router.get(
   "/search/:city",
   param("city")

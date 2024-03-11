@@ -2,10 +2,8 @@ import { Request, Response } from "express";
 import { Restaurant } from "../models/restaurant.model";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
-import { log } from "console";
-import { json } from "stream/consumers";
 
-const getRestaurant = async (req: Request, res: Response) => {
+const getRestaurants = async (req: Request, res: Response) => {
   try {
     const restaurant = await Restaurant.findOne({ user: req.userId });
 
@@ -83,6 +81,22 @@ const updateRestaurant = async (req: Request, res: Response) => {
   }
 };
 
+const getRestaurantById = async (req: Request, res: Response) => {
+  try {
+    const restaurantId = req.params.restaurantId;
+
+    const restaurant = await Restaurant.findById(restaurantId)
+    if(!restaurant){
+      return res.status(404).json({message: "restaurant not found"})
+    }
+
+    res.json(restaurant);
+  } catch (error) {
+    console.error("Restaurant Detail Fetch Error:: " + error);
+    res.status(500).json({ message: "Error while fetching restaurant details" });
+  }
+}
+
 const searchRestaurants = async (req: Request, res: Response) => {
   try {
     const city = req.params.city;
@@ -151,7 +165,6 @@ const searchRestaurants = async (req: Request, res: Response) => {
   }
 };
 
-
 const uploadImage = async (file: Express.Multer.File) => {
   const image = file;
   const base64Image = Buffer.from(image.buffer).toString("base64");
@@ -161,4 +174,4 @@ const uploadImage = async (file: Express.Multer.File) => {
   return uploadResponse.url;
 };
 
-export { createRestaurant, getRestaurant, updateRestaurant, searchRestaurants };
+export { createRestaurant, getRestaurants, updateRestaurant, searchRestaurants, getRestaurantById };
