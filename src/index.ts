@@ -2,13 +2,13 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import "dotenv/config";
 import mongoose from "mongoose";
-import { log } from "console";
-import userRoutes from "./routes/user.route"
-import restaurantRoutes from "./routes/restaurant.route"
+import userRoutes from "./routes/user.route";
+import restaurantRoutes from "./routes/restaurant.route";
+import orderRoutes from "./routes/order.route";
 import { v2 as cloudinary } from "cloudinary";
 
 mongoose.connect(process.env.MONGODB_CONNECTION_STRING as string).then(() => {
-  log("Connected to MongoDB");
+  console.log("Connected to MongoDB");
 });
 
 cloudinary.config({
@@ -24,11 +24,12 @@ app.use(express.json());
 app.use(cors());
 
 app.get("/health", async (req: Request, res: Response) => {
-  res.send({message: "Health's Ok!"})
-})
+  res.send({ message: "Health's Ok!" });
+});
 
 app.use("/api/user", userRoutes);
 app.use("/api/restaurant", restaurantRoutes);
+app.use("/api/order", orderRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port localhost:${PORT}`);
