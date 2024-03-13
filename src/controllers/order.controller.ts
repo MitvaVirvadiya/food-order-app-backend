@@ -14,7 +14,7 @@ type CheckoutSessionRequest = {
   deliveryDetails: {
     email: string;
     name: string;
-    address: string;
+    addressLine1: string;
     city: string;
   };
   restaurantId: string;
@@ -22,39 +22,38 @@ type CheckoutSessionRequest = {
 
 const createCheckoutSession = async (req: Request, res: Response) => {
   try {
-    const CheckoutSessionRequest: CheckoutSessionRequest = req.body;
+    const checkoutSessionRequest: CheckoutSessionRequest = req.body;
 
-    const restaturant = await Restaurant.findById(
-      CheckoutSessionRequest.restaurantId
-    );
-    if (!restaturant) {
+    const restaurant = await Restaurant.findById(checkoutSessionRequest.restaurantId);
+    if (!restaurant) {
       throw new Error("Restaurant not found");
     }
 
-    const lineItem = creatLineItem(
-      CheckoutSessionRequest,
-      restaturant.menuItems
+    const lineItem = createLineItem(
+      checkoutSessionRequest,
+      restaurant.menuItems
     );
 
     const session = await createSession(
       lineItem,
       "TEST_ORDER_ID",
-      restaturant.deliveryPrice,
-      restaturant._id.toString()
+      restaurant.deliveryPrice,
+      restaurant._id.toString()
     );
 
-    if(!session.url){
-        return res.status(500).json({ message: "Error creating stripe session" });
+    if (!session.url) {
+      return res.status(500).json({ message: "Error creating stripe session" });
     }
 
-    res.json({ url: session.url });
+    return res.json({ url: session.url }); // Return the session URL
+
   } catch (error: any) {
     console.log(error);
     res.status(500).json({ message: error.raw.message });
   }
 };
 
-const creatLineItem = (
+const createLineItem = (
   checkoutSessionRequest: CheckoutSessionRequest,
   menuItems: menuItemTypes[]
 ) => {
@@ -67,7 +66,7 @@ const creatLineItem = (
       throw new Error(`Menu item not found: ${cartItem.menuItemId}`);
     }
 
-    const list_item: Stripe.Checkout.SessionCreateParams.LineItem = {
+    const line_item: Stripe.Checkout.SessionCreateParams.LineItem = {
       price_data: {
         currency: "inr",
         unit_amount: menuItem.price,
@@ -78,7 +77,7 @@ const creatLineItem = (
       quantity: parseInt(cartItem.quantity),
     };
 
-    return list_item;
+    return line_item;
   });
   return lineItem;
 };
