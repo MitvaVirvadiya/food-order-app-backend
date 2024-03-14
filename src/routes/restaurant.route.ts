@@ -10,6 +10,7 @@ import {
 import { jwtCheck, jwtParse } from "../middleware/auth.middleware";
 import { validateRestaurant } from "../middleware/validation.middleware";
 import { param } from "express-validator";
+import { getOrders } from "../controllers/order.controller";
 
 const router = express.Router();
 
@@ -20,6 +21,8 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024,
   },
 });
+
+router.get("/orders", jwtCheck, jwtParse, getOrders);
 
 router.get("/", jwtCheck, jwtParse, getRestaurants);
 

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Restaurant } from "../models/restaurant.model";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
+import { Order } from "../models/order.model";
 
 const getRestaurants = async (req: Request, res: Response) => {
   try {
@@ -17,6 +18,25 @@ const getRestaurants = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Restaurant Fetch Error:: " + error);
     res.status(500).json({ message: "Error while fetching restaurant" });
+  }
+};
+
+const getRestaurantOrders = async (req: Request, res: Response) => {
+  try {
+    const restaurant = await Restaurant.findOne({ user: req.userId });
+
+    if (!restaurant) {
+      return res.status(404).json({ message: "restaurant not found" });
+    }
+
+    const orders = await Order.find({ restaurant: restaurant._id })
+      .populate("restaurant")
+      .populate("user");
+
+    res.json(orders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error while fetching orders" });
   }
 };
 
@@ -85,17 +105,19 @@ const getRestaurantById = async (req: Request, res: Response) => {
   try {
     const restaurantId = req.params.restaurantId;
 
-    const restaurant = await Restaurant.findById(restaurantId)
-    if(!restaurant){
-      return res.status(404).json({message: "restaurant not found"})
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      return res.status(404).json({ message: "restaurant not found" });
     }
 
     res.json(restaurant);
   } catch (error) {
     console.error("Restaurant Detail Fetch Error:: " + error);
-    res.status(500).json({ message: "Error while fetching restaurant details" });
+    res
+      .status(500)
+      .json({ message: "Error while fetching restaurant details" });
   }
-}
+};
 
 const searchRestaurants = async (req: Request, res: Response) => {
   try {
@@ -174,4 +196,10 @@ const uploadImage = async (file: Express.Multer.File) => {
   return uploadResponse.url;
 };
 
-export { createRestaurant, getRestaurants, updateRestaurant, searchRestaurants, getRestaurantById };
+export {
+  createRestaurant,
+  getRestaurants,
+  updateRestaurant,
+  searchRestaurants,
+  getRestaurantById,
+};
