@@ -183,9 +183,35 @@ const searchRestaurants = async (req: Request, res: Response) => {
     res.json(response);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Something went wrong" });
+    res.status(500).json({ message: "Error while searching restaurants" });
   }
 };
+
+const updateOrderStatus = async (req: Request, res: Response) => {
+  try {
+    const {orderId} = req.params
+    const {status} = req.body
+
+    const order = await Order.findById(orderId)
+
+    if(!order){
+      return res.status(404).json({message: "Order not found"})
+    }
+
+    const restaurant = await Restaurant.findById(order.restaurant)
+
+    if(restaurant?.user?._id.toString() !== req.userId.toString()){
+      return res.status(403).json({message: "You are not authorized to update this order"})
+    }
+
+    order.status = status
+    await order.save()
+    res.status(200).json(order)
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error while updating order status" });
+  }
+}
 
 const uploadImage = async (file: Express.Multer.File) => {
   const image = file;
@@ -202,4 +228,5 @@ export {
   updateRestaurant,
   searchRestaurants,
   getRestaurantById,
+  updateOrderStatus
 };
