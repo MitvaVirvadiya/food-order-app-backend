@@ -22,6 +22,23 @@ type CheckoutSessionRequest = {
   restaurantId: string;
 };
 
+const getOrders = async (req: Request, res: Response) => {
+  try {
+    const orders = await Order.find({ user: req.userId })
+      .populate("restaurant")
+      .populate("user");
+
+    if (!orders) {
+      return res.status(404).json({ message: "Orders not found" });
+    }
+
+    res.json(orders);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error while fetching orders" });
+  }
+};
+
 const stripeWebhookHandler = async (req: Request, res: Response) => {
   let event;
   try {
@@ -155,4 +172,4 @@ const createSession = async (
   return sessionData;
 };
 
-export { createCheckoutSession, stripeWebhookHandler };
+export { createCheckoutSession, stripeWebhookHandler, getOrders };
