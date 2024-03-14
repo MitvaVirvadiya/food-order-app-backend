@@ -228,5 +228,6 @@ export {
   updateRestaurant,
   searchRestaurants,
   getRestaurantById,
+  getRestaurantOrders,
   updateOrderStatus
 };

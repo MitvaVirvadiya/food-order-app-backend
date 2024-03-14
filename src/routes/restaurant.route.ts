@@ -3,6 +3,7 @@ import multer from "multer";
 import {
   createRestaurant,
   getRestaurantById,
+  getRestaurantOrders,
   getRestaurants,
   searchRestaurants,
   updateOrderStatus,
@@ -11,7 +12,6 @@ import {
 import { jwtCheck, jwtParse } from "../middleware/auth.middleware";
 import { validateRestaurant } from "../middleware/validation.middleware";
 import { param } from "express-validator";
-import { getOrders } from "../controllers/order.controller";
 
 const router = express.Router();
 
@@ -23,7 +23,7 @@ const upload = multer({
   },
 });
 
-router.get("/orders", jwtCheck, jwtParse, getOrders);
+router.get("/orders", jwtCheck, jwtParse, getRestaurantOrders);
 router.patch("/order/:orderId/status", jwtCheck, jwtParse, updateOrderStatus);
 
 router.get("/", jwtCheck, jwtParse, getRestaurants);
